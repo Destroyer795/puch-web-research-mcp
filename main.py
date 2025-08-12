@@ -1,3 +1,4 @@
+# main.py
 import os
 import json
 import requests
@@ -16,6 +17,9 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN", "12345678")
 MY_NUMBER = os.getenv("MY_NUMBER", "YOUR_MOBILE_NUMBER_HERE")
 SERPER_API_KEY = os.getenv("SERPER_API_KEY", "YOUR_SERPER_API_KEY_HERE")
+# --- Define the PORT variable for server.py to use ---
+PORT = int(os.getenv("PORT", 8080))
+
 
 # --- Models and Auth ---
 class RichToolDescription(BaseModel):
@@ -32,7 +36,8 @@ class SimpleBearerAuthProvider(BearerAuthProvider):
             return AccessToken(token=token, client_id="unknown", scopes=[], expires_at=None)
         return None
 
-mcp_server = FastMCP("Web Research Assistant MCP", auth=SimpleBearerAuthProvider(TOKEN))
+# --- Rename mcp_server to app for server.py ---
+app = FastMCP("Web Research Assistant MCP", auth=SimpleBearerAuthProvider(TOKEN))
 
 # --- Tool Descriptions ---
 ResearchDescription = RichToolDescription(
@@ -45,12 +50,12 @@ ScrapeDescription = RichToolDescription(
 )
 
 # --- The Research Tools ---
-@mcp_server.tool
+@app.tool
 async def validate() -> str:
     """Validation tool for the Puch AI Hackathon."""
     return MY_NUMBER
 
-@mcp_server.tool(description=ResearchDescription.model_dump_json())
+@app.tool(description=ResearchDescription.model_dump_json())
 def perform_web_research(query: Annotated[str, "The user's question or topic to search for."]) -> dict:
     if not SERPER_API_KEY or "YOUR_SERPER_API_KEY_HERE" in SERPER_API_KEY:
         return {"message": "Error: The SERPER_API_KEY is not configured in the tool server."}
@@ -71,7 +76,7 @@ def perform_web_research(query: Annotated[str, "The user's question or topic to 
     except Exception as e:
         return {"message": f"An unexpected error occurred during web search: {e}"}
 
-@mcp_server.tool(description=ScrapeDescription.model_dump_json())
+@app.tool(description=ScrapeDescription.model_dump_json())
 def scrape_webpage_content(url: Annotated[str, "The URL of the webpage to read."]) -> dict:
     try:
         headers = {
@@ -88,12 +93,4 @@ def scrape_webpage_content(url: Annotated[str, "The URL of the webpage to read."
     except Exception as e:
         return {"message": f"Sorry, I was unable to read the content from that URL. Error: {e}"}
 
-# --- Main Server Execution ---
-async def main():
-    """Runs the MCP server."""
-    print("Starting Web Research Assistant MCP Server...")
-    await mcp_server.run_async("streamable-http", host="0.0.0.0", port=8080)
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+# --- The old main execution block has been removed ---
