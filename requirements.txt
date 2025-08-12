@@ -1,4 +1,4 @@
-fast-mcp==0.1.2
+fastmcp>=2.0
 requests==2.32.3
 pydantic==2.8.2
 uvicorn==0.30.1
