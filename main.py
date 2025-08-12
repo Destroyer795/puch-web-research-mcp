@@ -1,4 +1,3 @@
-# main.py
 import os
 import json
 import requests
@@ -9,7 +8,7 @@ from bs4 import BeautifulSoup
 from fastmcp import FastMCP
 from fastmcp.server.auth.providers.bearer import BearerAuthProvider, RSAKeyPair
 from mcp.server.auth.provider import AccessToken
-from urllib.parse import urlparse # <-- Added to help find website names
+from urllib.parse import urlparse
 
 # Load environment variables from a .env file for local testing
 load_dotenv()
@@ -50,6 +49,14 @@ ScrapeDescription = RichToolDescription(
 
 # --- The Research Tools ---
 @app.tool
+async def about() -> dict:
+    """Provides metadata about this MCP server."""
+    return {
+        "name": app.name,
+        "description": "A powerful web research assistant that can search the internet and scrape webpage content to answer user questions with up-to-date information."
+    }
+
+@app.tool
 async def validate() -> str:
     """Validation tool for the Puch AI Hackathon."""
     return MY_NUMBER
@@ -69,24 +76,17 @@ def perform_web_research(query: Annotated[str, "The user's question or topic to 
         if "organic" not in search_results or not search_results["organic"]:
             return {"message": f"I couldn't find any web results for '{query}'."}
         
-        # --- NEW: More Elaborate, URL-free Formatting ---
-        
-        # Create an overall answer summary from the first result's snippet
         first_snippet = search_results["organic"][0].get('snippet', 'No summary available.')
         
-        # Build a descriptive list of source websites
         source_list = []
         for result in search_results["organic"]:
-            # Extract the website name from the link
             try:
                 domain = urlparse(result['link']).netloc
-                # Clean up the domain name (e.g., 'www.wikipedia.org' -> 'Wikipedia')
                 site_name = domain.replace('www.', '').split('.')[0].title()
                 source_list.append(f"- **{result['title']}** (found on {site_name})")
             except:
-                continue # Skip if the URL is malformed
+                continue
 
-        # Assemble the final, structured message without direct URLs
         message = (
             f"Based on my research for **'{query}'**, here is a summary:\n\n"
             f"{first_snippet}\n\n"
@@ -96,7 +96,6 @@ def perform_web_research(query: Annotated[str, "The user's question or topic to 
             f"{'\n'.join(source_list)}"
         )
         
-        # We still return the raw data in case the AI needs it for the scrape tool
         return {"message": message, "results_data": search_results["organic"]}
         
     except Exception as e:
@@ -104,7 +103,6 @@ def perform_web_research(query: Annotated[str, "The user's question or topic to 
 
 @app.tool(description=ScrapeDescription.model_dump_json())
 def scrape_webpage_content(url: Annotated[str, "The URL of the webpage to read."]) -> dict:
-    # ... (This tool remains unchanged)
     try:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
