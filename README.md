@@ -15,6 +15,14 @@ A powerful, two-step research agent built as an MCP Tool for the Puch AI Hackath
 
 ---
 
+## Example demo:
+
+<p align="center">
+  <img width="600" height="800" alt="image" src="https://github.com/user-attachments/assets/c98dfeed-67f2-4162-8307-aac4ce8c1a9c">
+</p>
+
+---
+
 [Click here to check it out on Puch AI](https://puch.ai/mcp/33LvRaUqGa)
 
 ---
