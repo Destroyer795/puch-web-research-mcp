@@ -84,8 +84,7 @@ ngrok http 8080
 Running the above command gives a randomly generated url which can be used to connect to the AI platform
 
 **6. Connect to Puch AI**
-* Open Puch AI in your browser
-* Start a new conversation
+* Open Puch AI in whatsapp
 * Use the connect command:
 ```bash
 /mcp connect https://your-domain.ngrok.app/mcp your_secret_token_here
