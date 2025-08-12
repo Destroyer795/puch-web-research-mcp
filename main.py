@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from fastmcp import FastMCP
 from fastmcp.server.auth.providers.bearer import BearerAuthProvider, RSAKeyPair
 from mcp.server.auth.provider import AccessToken
+from urllib.parse import urlparse # <-- Added to help find website names
 
 # Load environment variables from a .env file for local testing
 load_dotenv()
@@ -17,7 +18,6 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN", "12345678")
 MY_NUMBER = os.getenv("MY_NUMBER", "YOUR_MOBILE_NUMBER_HERE")
 SERPER_API_KEY = os.getenv("SERPER_API_KEY", "YOUR_SERPER_API_KEY_HERE")
-# --- Define the PORT variable for server.py to use ---
 PORT = int(os.getenv("PORT", 8080))
 
 
@@ -36,17 +36,16 @@ class SimpleBearerAuthProvider(BearerAuthProvider):
             return AccessToken(token=token, client_id="unknown", scopes=[], expires_at=None)
         return None
 
-# --- Rename mcp_server to app for server.py ---
 app = FastMCP("Web Research Assistant MCP", auth=SimpleBearerAuthProvider(TOKEN))
 
 # --- Tool Descriptions ---
 ResearchDescription = RichToolDescription(
-    description="Performs an initial web search for a query to find relevant sources.",
+    description="Performs a web search for a query and provides a detailed summary paragraph, followed by a list of source websites.",
     use_when="When the user asks a question that requires up-to-date information. This is the first step."
 )
 ScrapeDescription = RichToolDescription(
     description="Extracts all the clean text content from a specific webpage URL. Use this after finding sources with the research tool.",
-    use_when="When the user wants a detailed summary or the full content of a specific link that was found via web research."
+    use_when="When the user wants the full content of a specific link that was found via web research."
 )
 
 # --- The Research Tools ---
@@ -66,18 +65,46 @@ def perform_web_research(query: Annotated[str, "The user's question or topic to 
         response = requests.post(url, headers=headers, data=payload)
         response.raise_for_status()
         search_results = response.json()
+
         if "organic" not in search_results or not search_results["organic"]:
             return {"message": f"I couldn't find any web results for '{query}'."}
-        summary_parts = [f"I found these top results for **'{query}'**. Which one would you like me to read and summarize in detail?\n"]
-        for i, result in enumerate(search_results["organic"]):
-            summary_parts.append(f"\n{i+1}. **{result['title']}**\n   *Source: {result['link']}*")
-        message = "\n".join(summary_parts)
+        
+        # --- NEW: More Elaborate, URL-free Formatting ---
+        
+        # Create an overall answer summary from the first result's snippet
+        first_snippet = search_results["organic"][0].get('snippet', 'No summary available.')
+        
+        # Build a descriptive list of source websites
+        source_list = []
+        for result in search_results["organic"]:
+            # Extract the website name from the link
+            try:
+                domain = urlparse(result['link']).netloc
+                # Clean up the domain name (e.g., 'www.wikipedia.org' -> 'Wikipedia')
+                site_name = domain.replace('www.', '').split('.')[0].title()
+                source_list.append(f"- **{result['title']}** (found on {site_name})")
+            except:
+                continue # Skip if the URL is malformed
+
+        # Assemble the final, structured message without direct URLs
+        message = (
+            f"Based on my research for **'{query}'**, here is a summary:\n\n"
+            f"{first_snippet}\n\n"
+            f"--- \n"
+            f"### Where to Learn More\n"
+            f"You can find more detailed information on this topic from these top sources:\n"
+            f"{'\n'.join(source_list)}"
+        )
+        
+        # We still return the raw data in case the AI needs it for the scrape tool
         return {"message": message, "results_data": search_results["organic"]}
+        
     except Exception as e:
         return {"message": f"An unexpected error occurred during web search: {e}"}
 
 @app.tool(description=ScrapeDescription.model_dump_json())
 def scrape_webpage_content(url: Annotated[str, "The URL of the webpage to read."]) -> dict:
+    # ... (This tool remains unchanged)
     try:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -92,5 +119,3 @@ def scrape_webpage_content(url: Annotated[str, "The URL of the webpage to read."
         return {"message": "Here is the extracted text for summarization:", "full_text": full_text.strip()}
     except Exception as e:
         return {"message": f"Sorry, I was unable to read the content from that URL. Error: {e}"}
-
-# --- The old main execution block has been removed ---
