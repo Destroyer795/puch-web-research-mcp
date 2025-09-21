@@ -1,6 +1,6 @@
 # Web Research Assistant MCP
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Destroyer795/puch-web-research-mcp/blob/main/LICENSE)
 
 A powerful, two-step research agent built as an MCP Tool for the Puch AI Hackathon. This tool gives any AI the ability to access real-time information from the internet, find relevant sources, and read the content of webpages to provide detailed, up-to-date answers.
 
