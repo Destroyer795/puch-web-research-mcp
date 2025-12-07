@@ -7,15 +7,25 @@ A powerful, two-step research agent built as an MCP Tool for the Puch AI Hackath
 ---
 ## Features
 
-* **Real-Time Web Search**: Utilizes the Serper API to perform live Google searches for any user query.
-* **Webpage Content Scraping**: Can visit a specific URL from the search results and extract its main text content for summarization.
-* **Secure Configuration**: Uses environment variables to securely manage API keys and tokens, ready for cloud deployment.
-* **Self-Descriptive API**: Includes `about` and `validate` tools for easy integration and verification with the hackathon platform.
-* **Deployment**: Deployed via Render.
+* **Asynchronous Architecture**: Built using `FastAPI` (via FastMCP) and `httpx` to handle multiple concurrent AI requests efficiently.
+* **Real-Time Web Search**: Integrates with the **Serper API** to fetch live search results asynchronously.
+* **Non-Blocking Scraper**: Visits URLs and extracts main text content using `BeautifulSoup` and `async/await` patterns to minimize latency.
+* **Secure & Production-Ready**: Implements robust error handling, input validation, and secure environment variable management for API keys.
+* **Standardized Protocol**: Fully compliant with the Model Context Protocol (MCP) for seamless integration with LLMs and AI platforms.
 
 ---
 
-## Example demo:
+## Tech Stack
+
+* **Framework**: [FastMCP](https://github.com/jlowin/fastmcp) (FastAPI-based)
+* **Async HTTP Client**: `httpx`
+* **Parsing**: `BeautifulSoup4` (lxml/html.parser)
+* **Server**: `Uvicorn` (ASGI)
+* **Deployment**: Render / Docker
+
+---
+
+## Example demo
 
 <p align="center">
   <img width="600" height="800" alt="image" src="https://github.com/user-attachments/assets/c98dfeed-67f2-4162-8307-aac4ce8c1a9c">
