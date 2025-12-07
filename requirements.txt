@@ -1,7 +1,6 @@
 fastmcp
-requests
-pydantic
 uvicorn
-python-dotenv
+httpx
 beautifulsoup4
-lxml
+python-dotenv
+pydantic
